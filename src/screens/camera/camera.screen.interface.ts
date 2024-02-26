@@ -1,0 +1,1 @@
+export type CameraDevice="front"|"back"|"external"

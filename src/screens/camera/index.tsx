@@ -13,17 +13,17 @@ import { useAppState } from '@react-native-community/hooks'
 import { saveFilesInCameraRoll } from '../../utils/cameraRoll'
 
 export default function Camera(navigationProps: PropsNvI) {
+
     const { hasPermission: hasPermissionCamera, requestPermission: requestPermissionCamera } = useCameraPermission()
-    const isFocused = useIsFocused()
-    const appState = useAppState()
-    const [isCameraActive, setIsCameraActive] = useState<boolean>(hasPermissionCamera && (isFocused && appState === "active"))
     const [currentCameraDevice, setCurrentCameraDevice] = useState<CameraDevice>("back")
     const [currentFps, setCurrentFps] = useState<number>(30)
     const [flashStatus, setFlashStatus] = useState<"on" | "off">("off")
     const [isHdrActive, setIsHdrActive] = useState<boolean>(false)
-
     const device = useCameraDevice(currentCameraDevice)
     const camera = useRef<CameraVision>(null)
+    const isFocused = useIsFocused()
+    const appState = useAppState()
+    const isActive = isFocused && appState === "active"
 
     useEffect(() => {
         handleInitializeCamera()
@@ -32,10 +32,9 @@ export default function Camera(navigationProps: PropsNvI) {
     const handleRequestPermissionCamera = async () => {
         requestPermissionCamera()
             .then(resultRequestPermissionCamera => {
-                setIsCameraActive(resultRequestPermissionCamera)
-                if (!requestPermissionCamera) {
+                if (!resultRequestPermissionCamera) {
                     showToast(`We need camera permission`, "error")
-                }
+                }else{setFlashStatus("on")}
             })
             .catch(() => {
                 showToast(`Error on request camera's permission, try again`, "error")
@@ -50,11 +49,7 @@ export default function Camera(navigationProps: PropsNvI) {
     }
 
     const handleInitializeCamera = async () => {
-        if (hasPermissionCamera) {
-            setTimeout(() => {
-                setIsCameraActive(true);
-            }, 500)
-        } else {
+        if (!hasPermissionCamera) {
             handleRequestPermissionCamera()
         }
     }
@@ -66,7 +61,7 @@ export default function Camera(navigationProps: PropsNvI) {
             <CameraVision
                 ref={camera}
                 device={device!}
-                isActive={isCameraActive || true}
+                isActive={isActive}
                 style={StyleSheet.absoluteFill}
                 torch={flashStatus}
                 photo={!isHdrActive}

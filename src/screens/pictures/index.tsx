@@ -18,32 +18,38 @@ export default function Pictures() {
 
   return (
     <ScrollView horizontal={false}>
-      <FlatList
-        data={files}
-        renderItem={({ item }) => (
-          <View>
-            {item.node.id && (
-              <TouchableOpacity
-                onPress={() => { seFileSelected(item); setIsModalVisible(true) }}
-                style={{
-                  width: 100,
-                  height: 100
-                }}>
-                <Image
-                  source={{ uri: item.node.image.uri }}
-                  style={{ width: "100%", height: "100%" }}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-        keyExtractor={(item) => item.node.id}
-      />
+      <View>
+        {
+          files.length > 0 ? (
+            <FlatList
+              data={files}
+              renderItem={({ item }) => (
+                <View>
+                  {item.node.id && (
+                    <TouchableOpacity
+                      onPress={() => { seFileSelected(item); setIsModalVisible(true) }}
+                      style={{
+                        width: 100,
+                        height: 100
+                      }}>
+                      <Image
+                        source={{ uri: item.node.image.uri }}
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+              keyExtractor={(item) => item.node.id}
+            />
+          ) : (<></>)
+        }
+      </View>
       <Fragment>
-        <Modal 
-        isVisible={isModalVisible}
-        onBackdropPress={() => setIsModalVisible(false)}
-        onSwipeComplete={() => setIsModalVisible(false)}
+        <Modal
+          isVisible={isModalVisible}
+          onBackdropPress={() => setIsModalVisible(false)}
+          onSwipeComplete={() => setIsModalVisible(false)}
         >
           <View style={{ flex: 1 }}>
             <Image

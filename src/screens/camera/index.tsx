@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react'
 import showToast from '../../utils/toast'
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native'
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native'
 import { useCameraDevice, useCameraPermission, useMicrophonePermission, Camera as CameraVision } from 'react-native-vision-camera'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { faBoltLightning, faBullseye, faCamera, faCameraRotate, faImages, faVideo } from '@fortawesome/free-solid-svg-icons'
@@ -13,18 +13,17 @@ import { useAppState } from '@react-native-community/hooks'
 import { saveFilesInCameraRoll } from '../../utils/cameraRoll'
 
 export default function Camera(navigationProps: PropsNvI) {
+
     const { hasPermission: hasPermissionCamera, requestPermission: requestPermissionCamera } = useCameraPermission()
     const { hasPermission: hasPermissionMicrophone, requestPermission: requestPermissionMicrophone } = useMicrophonePermission()
     const isFocused = useIsFocused()
     const appState = useAppState()
 
-    //const [isCameraPermission, setIsCameraPermission] = useState<boolean>(hasPermissionCamera)
     const [isCameraActive, setIsCameraActive] = useState<boolean>(hasPermissionCamera && (isFocused && appState === "active"))
-
     const [currentCameraDevice, setCurrentCameraDevice] = useState<CameraDevice>("back")
     const [isPhoto, setIsPhoto] = useState<"photo" | "video">("photo")
     const [currentFps, setCurrentFps] = useState<number>(30)
-    const [flashStatus, setFlashStatus] = useState<"on" | "off">("on")
+    const [flashStatus, setFlashStatus] = useState<"on" | "off">("off")
     const [isHdrActive, setIsHdrActive] = useState<boolean>(false)
 
     const device = useCameraDevice(currentCameraDevice)
@@ -51,7 +50,7 @@ export default function Camera(navigationProps: PropsNvI) {
         requestPermissionMicrophone()
             .then((resultRequestPermissionMicrophone) => {
                 if (resultRequestPermissionMicrophone) handleStartVideo()
-                else showToast(`Permiso no conecedido`, "error")
+                else showToast(`We need microphone permission`, "error")
             }).catch(() => {
                 showToast(`Error on request microphone's permission, try again`, "error")
             })
@@ -76,7 +75,7 @@ export default function Camera(navigationProps: PropsNvI) {
         camera.current!.startRecording({
             flash: flashStatus,
             onRecordingError(error) {
-                showToast(`Ocurrio un error en la grabacion del video`, "error")
+                showToast(`Error on recording video, try again`, "error")
             },
             onRecordingFinished(video) {
                 saveFilesInCameraRoll(video)
@@ -88,7 +87,7 @@ export default function Camera(navigationProps: PropsNvI) {
         if (hasPermissionCamera) {
             setTimeout(() => {
                 setIsCameraActive(true);
-            }, 1000)
+            }, 500)
         } else {
             handleRequestPermissionCamera()
         }
@@ -99,17 +98,16 @@ export default function Camera(navigationProps: PropsNvI) {
     return (
         <Fragment>
             <CameraVision
-                id='camera-vision-v01'
                 ref={camera}
                 device={device!}
                 isActive={isCameraActive}
                 style={StyleSheet.absoluteFill}
-                //torch={flashStatus}
-                //photo={isPhoto === "photo"}
-                //video={isPhoto === "video"}
-                //videoHdr={isHdrActive && isPhoto === "video"}
-                //photoHdr={isHdrActive && isPhoto === "photo"}
-                //fps={currentFps}
+                torch={flashStatus}
+                photo={isPhoto === "photo" && !isHdrActive}
+                video={isPhoto === "video" && !isHdrActive}
+                videoHdr={isHdrActive && isPhoto === "video"}
+                photoHdr={isHdrActive && isPhoto === "photo"}
+                fps={currentFps}
             />
 
             <View style={camera_style.container}>

@@ -1,9 +1,9 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react'
 import showToast from '../../utils/toast'
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native'
-import { useCameraDevice, useCameraPermission, useMicrophonePermission, Camera as CameraVision } from 'react-native-vision-camera'
+import { useCameraDevice, useCameraPermission, Camera as CameraVision } from 'react-native-vision-camera'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { faBoltLightning, faBullseye, faCamera, faCameraRotate, faImages, faVideo } from '@fortawesome/free-solid-svg-icons'
+import { faBoltLightning, faBullseye, faCameraRotate, faImages } from '@fortawesome/free-solid-svg-icons'
 import { handleNavigate, handleReplaceScreen } from '../../utils/handleNavigate'
 import { PropsNvI, Screens } from '../../navigation/navigation.interface'
 import { CameraDevice } from './camera.screen.interface'
@@ -13,15 +13,11 @@ import { useAppState } from '@react-native-community/hooks'
 import { saveFilesInCameraRoll } from '../../utils/cameraRoll'
 
 export default function Camera(navigationProps: PropsNvI) {
-
     const { hasPermission: hasPermissionCamera, requestPermission: requestPermissionCamera } = useCameraPermission()
-    const { hasPermission: hasPermissionMicrophone, requestPermission: requestPermissionMicrophone } = useMicrophonePermission()
     const isFocused = useIsFocused()
     const appState = useAppState()
-
     const [isCameraActive, setIsCameraActive] = useState<boolean>(hasPermissionCamera && (isFocused && appState === "active"))
     const [currentCameraDevice, setCurrentCameraDevice] = useState<CameraDevice>("back")
-    const [isPhoto, setIsPhoto] = useState<"photo" | "video">("photo")
     const [currentFps, setCurrentFps] = useState<number>(30)
     const [flashStatus, setFlashStatus] = useState<"on" | "off">("off")
     const [isHdrActive, setIsHdrActive] = useState<boolean>(false)
@@ -46,41 +42,11 @@ export default function Camera(navigationProps: PropsNvI) {
             })
     }
 
-    const handleRequestPermissionMicrophone = async () => {
-        requestPermissionMicrophone()
-            .then((resultRequestPermissionMicrophone) => {
-                if (resultRequestPermissionMicrophone) handleStartVideo()
-                else showToast(`We need microphone permission`, "error")
-            }).catch(() => {
-                showToast(`Error on request microphone's permission, try again`, "error")
-            })
-    }
-
     const handleTakePhoto = async () => {
         const photo = await camera.current!.takePhoto({
             flash: flashStatus
         })
         saveFilesInCameraRoll(photo)
-    }
-
-    const verifyMicrophonePermission = () => {
-        if (hasPermissionMicrophone) {
-            handleStartVideo()
-        } else {
-            handleRequestPermissionMicrophone()
-        }
-    }
-
-    const handleStartVideo = () => {
-        camera.current!.startRecording({
-            flash: flashStatus,
-            onRecordingError(error) {
-                showToast(`Error on recording video, try again`, "error")
-            },
-            onRecordingFinished(video) {
-                saveFilesInCameraRoll(video)
-            }
-        })
     }
 
     const handleInitializeCamera = async () => {
@@ -100,13 +66,11 @@ export default function Camera(navigationProps: PropsNvI) {
             <CameraVision
                 ref={camera}
                 device={device!}
-                isActive={isCameraActive}
+                isActive={isCameraActive || true}
                 style={StyleSheet.absoluteFill}
                 torch={flashStatus}
-                photo={isPhoto === "photo" && !isHdrActive}
-                video={isPhoto === "video" && !isHdrActive}
-                videoHdr={isHdrActive && isPhoto === "video"}
-                photoHdr={isHdrActive && isPhoto === "photo"}
+                photo={!isHdrActive}
+                photoHdr={isHdrActive}
                 fps={currentFps}
             />
 
@@ -141,20 +105,9 @@ export default function Camera(navigationProps: PropsNvI) {
                         <FontAwesomeIcon color='white' secondaryColor='purple' size={40} icon={faImages} />
                     </TouchableOpacity>
                     <TouchableOpacity
-                        onPress={() => {
-                            if (isPhoto === "photo") {
-                                handleTakePhoto()
-                            } else if (isPhoto === "video") {
-                                verifyMicrophonePermission()
-                            }
-                        }}
+                        onPress={() => handleTakePhoto()}
                     >
                         <FontAwesomeIcon color='white' size={60} icon={faBullseye} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => setIsPhoto(isPhoto === "photo" ? "video" : "photo")}
-                    >
-                        <FontAwesomeIcon color='white' size={40} icon={isPhoto === "photo" ? faVideo : faCamera} />
                     </TouchableOpacity>
                 </View>
             </View>

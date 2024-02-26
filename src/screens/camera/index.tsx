@@ -8,8 +8,6 @@ import { handleNavigate, handleReplaceScreen } from '../../utils/handleNavigate'
 import { PropsNvI, Screens } from '../../navigation/navigation.interface'
 import { CameraDevice } from './camera.screen.interface'
 import { camera_style } from './camera.screen.style'
-import { useIsFocused } from '@react-navigation/native'
-import { useAppState } from '@react-native-community/hooks'
 import { saveFilesInCameraRoll } from '../../utils/cameraRoll'
 
 export default function Camera(navigationProps: PropsNvI) {
@@ -21,9 +19,6 @@ export default function Camera(navigationProps: PropsNvI) {
     const [isHdrActive, setIsHdrActive] = useState<boolean>(false)
     const device = useCameraDevice(currentCameraDevice)
     const camera = useRef<CameraVision>(null)
-    const isFocused = useIsFocused()
-    const appState = useAppState()
-    const isActive = isFocused && appState === "active"
 
     useEffect(() => {
         handleInitializeCamera()
@@ -61,7 +56,7 @@ export default function Camera(navigationProps: PropsNvI) {
             <CameraVision
                 ref={camera}
                 device={device!}
-                isActive={isActive}
+                isActive={true}
                 style={StyleSheet.absoluteFill}
                 torch={flashStatus}
                 photo={!isHdrActive}
